@@ -1,2 +1,2 @@
-# SG-pythonweb
-python3
+# aquarius
+基于python3极简web框架
