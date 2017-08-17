@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from server import TcpServer
 from response import to_json_response
 
@@ -14,6 +16,7 @@ class Aquarius(TcpServer):
         return inner
 
     def to_parse(self, string, socket):
+        # print(socket)
 
         def string_splitlines(string):
             list_res = string.decode('utf-8').splitlines()
@@ -21,11 +24,24 @@ class Aquarius(TcpServer):
                     'body': list_res[-1]}
 
         parse_request = string_splitlines(string)
-        method, path, agreement = parse_request["head"][0].split()
+        try:
+            method, path, agreement = parse_request["head"][0].split()
+        except IndexError:
+            path = "/"
+
+        parse_request["method"] = method
+
+        try:
+            path, query_string = path.split("?", 1)
+        except ValueError:
+            pass
+        else:
+            parse_request["query_string"] = query_string
 
         try:
             msg = self.url_func[path](parse_request)
         except KeyError:
+            print(method, path, "404 Not Found", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             socket.send(to_json_response({"result": "Not Found"}))
         else:
             socket.send(msg)
