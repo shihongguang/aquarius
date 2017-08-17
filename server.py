@@ -1,14 +1,20 @@
+"""
+server
+"""
+
 import socket
 import select
 
 
 class TcpServer(object):
+    """Tcp Server"""
 
-    def __init__(self,port=8000):
+    def __init__(self, port=8000):
         self.port = port
         self.queue_size = 1000
 
     def start(self, port=8000):
+        """server start"""
         self.port = port
         self.server_run()
 
@@ -24,13 +30,16 @@ class TcpServer(object):
 
     @property
     def epoll(self):
+        """epoll"""
         return select.epoll()
 
     @property
     def max_bytes(self, num=1000):
+        """rev max bytes"""
         return 1024 * num
 
     def server_run(self):
+        """server run"""
         server_socket = self.server_socket
         server_f = server_socket.fileno()
 
@@ -41,21 +50,21 @@ class TcpServer(object):
 
         while True:
             epoll_list = epoll.poll()
+            for _fd, event in epoll_list:
+                if _fd == server_f:
+                    socket_c, _ = server_socket.accept()
+                    socket_c.setblocking(0)
+                    client_socket_fs[socket_c.fileno()] = socket_c
+                    epoll.register(socket_c.fileno(), select.EPOLLIN | select.EPOLLET)
 
-            for f, e in epoll_list:
-                if f == server_f:
-                    s, _ = server_socket.accept()
-                    s.setblocking(0)
-                    client_socket_fs[s.fileno()] = s
-                    epoll.register(s.fileno(), select.EPOLLIN | select.EPOLLET)
-
-                elif e == select.EPOLLIN:
-                    bytes_request = client_socket_fs[f].recv(self.max_bytes)
+                elif event == select.EPOLLIN:
+                    bytes_request = client_socket_fs[_fd].recv(self.max_bytes)
                     if bytes_request:
-                        self.to_parse(bytes_request, client_socket_fs[f])
+                        self.to_parse(bytes_request, client_socket_fs[_fd])
                     else:
-                        epoll.unregister(f)
-                        client_socket_fs[f].close()
+                        epoll.unregister(_fd)
+                        client_socket_fs[_fd].close()
 
-    def to_parse(self, string, socket):
+    def to_parse(self, string, socket_args):
+        """parse string"""
         pass
