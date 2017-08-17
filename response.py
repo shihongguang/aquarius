@@ -1,7 +1,13 @@
-import json
+"""
+response
+"""
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
-def to_json_response(struct):
+def json_response(struct):
     body = json.dumps(struct)
 
     t = [

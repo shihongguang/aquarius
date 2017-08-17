@@ -16,7 +16,10 @@ class TcpServer(object):
     def start(self, port=8000):
         """server start"""
         self.port = port
-        self.server_run()
+        try:
+            self.server_run()
+        except KeyboardInterrupt:
+            print("\r\nGood Bye!")
 
     @property
     def server_socket(self):
