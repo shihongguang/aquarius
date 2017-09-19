@@ -2,17 +2,19 @@
 http parse
 """
 
-def parse_http(string):
 
+def parse_http(string):
+    """parse"""
     list_res = string.decode('utf-8').splitlines()
-    http_text= {
+    http_text = {
         'head': list_res[:-1],
         'body': list_res[-1]
         }
 
     try:
-        method, path, agreement = http_text["head"][0].split()
+        method, path, _ = http_text["head"][0].split()
     except IndexError:
+        method = "GET"
         path = "/"
 
     http_text["method"] = method

@@ -47,7 +47,7 @@ class TcpServer(object):
         server_f = server_socket.fileno()
 
         epoll = self.epoll
-        epoll.register(server_f, select.EPOLLIN|select.EPOLLET)
+        epoll.register(server_f, select.EPOLLIN | select.EPOLLET)
 
         client_socket_fs = {}
 
@@ -63,11 +63,11 @@ class TcpServer(object):
                 elif event == select.EPOLLIN:
                     bytes_request = client_socket_fs[_fd].recv(self.max_bytes)
                     if bytes_request:
-                        self.to_parse(bytes_request, client_socket_fs[_fd])
+                        self.to_response(bytes_request, client_socket_fs[_fd])
                     else:
                         epoll.unregister(_fd)
                         client_socket_fs[_fd].close()
 
-    def to_parse(self, string, socket_args):
+    def to_response(self, string, socket_args):
         """parse string"""
-        pass
+        raise ValueError("not a function")
