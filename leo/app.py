@@ -1,41 +1,39 @@
+import functools
+import logging
+import asyncio 
+import re
+
 import uvloop
-import asyncio
-from server import ServerHttpProtocol
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+from server import HttpProtocol
 from response import json_response
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+class Aquarius(HttpProtocol):
 
-class Aquarius(ServerHttpProtocol):
+    _loop = asyncio.get_event_loop()
+    _route_config = {}
 
-    def __init__(self):
+    def __init__(self, name=None):
         super(Aquarius, self).__init__()
-
-        self._loop = asyncio.get_event_loop()
-        self._route = {}
+        self.name = name
 
     def run(self, **kwargs):
-        _server = self._loop.create_server(Aquarius, **kwargs)
-        server = self._loop.run_until_complete(_server)
-
         try:
-            self._loop.run_until_complete(server.wait_closed())
+            self._loop.run_until_complete(self._loop.create_server(Aquarius, **kwargs))
+            self._loop.run_forever()
         except KeyboardInterrupt:
-            print("server is closing")
-        finally:
-            server.close()
+            print("server is closing, byebye!")
+            self._loop.stop()
+
+    async def start_response(self, transport, request):
+        try:
+            res = await self._route_config.get(request.url.decode())(request)
+            transport.write(res)
+        except TypeError as e:
+            print(request.url.decode())
 
     def route(self, path):
-        def _inner(view):
-            self._route.update({path: view})
+        def _inner(func):
+            self._route_config.update({path: func})
         return _inner
-
-    def start_response(self):
-        print(self._request)
-        res = json_response({"name": "shihongguang"})
-        self._transport.write(res)
-        asyncio.sleep(10)
-        self._transport.close()
-
-app = Aquarius()
-app.run(host='0.0.0.0', port=8001)
